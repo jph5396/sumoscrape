@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jph5396/sumoScrape/commands"
-	"github.com/jph5396/sumoScrape/sumoutils"
+	"github.com/jph5396/sumoscrape/commands"
+	"github.com/jph5396/sumoscrape/sumoutils"
 )
 
 func main() {

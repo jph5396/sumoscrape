@@ -1,4 +1,4 @@
-module github.com/jph5396/sumoScrape
+module github.com/jph5396/sumoscrape
 
 go 1.14
 
