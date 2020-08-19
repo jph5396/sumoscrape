@@ -114,55 +114,6 @@ func BanzukeScrape(basho int) []Rikishi {
 	return RikishiList
 }
 
-// func identifySide(i int) string {
-// 	if i == 1 || i == 0 {
-// 		return "east"
-// 	}
-// 	return "west"
-// }
-
-// // check if rank is sanyaku
-// func isSanyaku(rank string) bool {
-// 	sanyakuRanks := []string{"Y", "O", "S", "K"}
-// 	for _, item := range sanyakuRanks {
-// 		if item == rank {
-// 			return true
-// 		}
-// 	}
-// 	return false
-// }
-
-// // because sanyaku ranks to do not have their number, we need to add it.
-// // we check the master list to see what the previous rank was set to.
-// func getSanyakuRank(rank string, masterList []Rikishi) string {
-
-// 	// if list has no members in it, return a "{rank}1"
-// 	if len(masterList) == 0 {
-// 		return rank + "1"
-
-// 		// if the last rikishi rank is equal to rank, get last rikishi number and add one for new rank.
-// 	} else if lastRikishi := masterList[len(masterList)-1]; string(lastRikishi.rank[0]) == rank {
-// 		regex := regexp.MustCompile("[0-9]+")
-// 		oldRankNum, err := strconv.Atoi(regex.FindString(lastRikishi.rank))
-// 		if err != nil {
-// 			panic(err)
-// 		}
-
-// 		return rank + strconv.Itoa(oldRankNum+1)
-// 	}
-
-// 	// rank is not equal.
-// 	return rank + "1"
-// }
-
-// // uses querySelectory to determine if item exists.
-// func containsClass(class string, collyEl *colly.HTMLElement) bool {
-// 	if collyEl.Attr("class") == class {
-// 		return true
-// 	}
-// 	return false
-// }
-
 // function should parse the title and href from the A tag and return a ShikonaATag struct
 func parseShikonaATag(element *colly.HTMLElement) ShikonaATag {
 	var returnVal ShikonaATag
