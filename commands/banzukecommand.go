@@ -6,7 +6,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -54,7 +53,7 @@ func BanzukeScrape(basho int) []Rikishi {
 	}
 
 	c := colly.NewCollector()
-	MasterBanzukeList := []Rikishi{}
+	RikishiList := []Rikishi{}
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("visiting", r.URL)
@@ -75,67 +74,34 @@ func BanzukeScrape(basho int) []Rikishi {
 		// only target Makuuchi and juryo divisions.
 		if strings.Contains(tableCaption, "Makuuchi") || strings.Contains(tableCaption, "Juryo") {
 
-			// each tr should represent 1 or 2 rikishi.
+			// each tr should represent 1 rikishi
 			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
 
-				var EastRikishi Rikishi
-				var WestRikishi Rikishi
+				var newRikishi Rikishi
 
+				//using td index to identify column.
 				tr.ForEach("td", func(j int, td *colly.HTMLElement) {
-					if containsClass("shikona", td) || containsClass("debut", td) {
-						namedata := parseShikonaATag(td)
-						if identifySide(j) == "east" {
-							EastRikishi.applyTagResults(namedata)
-						} else {
-							WestRikishi.applyTagResults(namedata)
-						}
-					}
-					if containsClass("short_rank", td) {
-						var baseRank string
-						if isSanyaku(td.Text) {
-							baseRank = getSanyakuRank(td.Text, MasterBanzukeList)
-						} else {
-							baseRank = td.Text
-						}
+					if j == 0 {
+						newRikishi.rank = td.Text
 
-						EastRikishi.rank = baseRank + "e"
-						WestRikishi.rank = baseRank + "w"
-
-						// set division based on rank.
+						//set division based on rank.
 						if strings.Contains(td.Text, "J") {
-							EastRikishi.division = 2
-							WestRikishi.division = 2
+							newRikishi.division = 2
 						} else {
-							EastRikishi.division = 1
-							WestRikishi.division = 1
+							newRikishi.division = 1
 						}
 					}
-					if containsClass("", td) {
-						side := identifySide(j)
-						if side == "east" {
-							EastRikishi.result = td.Text
-						} else {
-							WestRikishi.result = td.Text
-						}
+					if j == 1 {
+						aTagResults := parseShikonaATag(td)
+						newRikishi.applyTagResults(aTagResults)
 					}
-
-					// empty cell indicates there is not a rikishi for that side.
-					// identify that side and set the corresponding rikishi id to zeros
-					if containsClass("emptycell", td) {
-						side := identifySide(j)
-						if side == "east" {
-							EastRikishi.id = 0
-						} else {
-							WestRikishi.id = 0
-						}
+					if j == 2 {
+						newRikishi.result = td.Text
 					}
-
 				})
-				if EastRikishi.id != 0 {
-					MasterBanzukeList = append(MasterBanzukeList, EastRikishi)
-				}
-				if WestRikishi.id != 0 {
-					MasterBanzukeList = append(MasterBanzukeList, WestRikishi)
+
+				if newRikishi.id != 0 {
+					RikishiList = append(RikishiList, newRikishi)
 				}
 
 			})
@@ -143,59 +109,59 @@ func BanzukeScrape(basho int) []Rikishi {
 
 	})
 
-	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v", basho))
+	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v&hl=on&c=on", basho))
 
-	return MasterBanzukeList
+	return RikishiList
 }
 
-func identifySide(i int) string {
-	if i == 1 || i == 0 {
-		return "east"
-	}
-	return "west"
-}
+// func identifySide(i int) string {
+// 	if i == 1 || i == 0 {
+// 		return "east"
+// 	}
+// 	return "west"
+// }
 
-// check if rank is sanyaku
-func isSanyaku(rank string) bool {
-	sanyakuRanks := []string{"Y", "O", "S", "K"}
-	for _, item := range sanyakuRanks {
-		if item == rank {
-			return true
-		}
-	}
-	return false
-}
+// // check if rank is sanyaku
+// func isSanyaku(rank string) bool {
+// 	sanyakuRanks := []string{"Y", "O", "S", "K"}
+// 	for _, item := range sanyakuRanks {
+// 		if item == rank {
+// 			return true
+// 		}
+// 	}
+// 	return false
+// }
 
-// because sanyaku ranks to do not have their number, we need to add it.
-// we check the master list to see what the previous rank was set to.
-func getSanyakuRank(rank string, masterList []Rikishi) string {
+// // because sanyaku ranks to do not have their number, we need to add it.
+// // we check the master list to see what the previous rank was set to.
+// func getSanyakuRank(rank string, masterList []Rikishi) string {
 
-	// if list has no members in it, return a "{rank}1"
-	if len(masterList) == 0 {
-		return rank + "1"
+// 	// if list has no members in it, return a "{rank}1"
+// 	if len(masterList) == 0 {
+// 		return rank + "1"
 
-		// if the last rikishi rank is equal to rank, get last rikishi number and add one for new rank.
-	} else if lastRikishi := masterList[len(masterList)-1]; string(lastRikishi.rank[0]) == rank {
-		regex := regexp.MustCompile("[0-9]+")
-		oldRankNum, err := strconv.Atoi(regex.FindString(lastRikishi.rank))
-		if err != nil {
-			panic(err)
-		}
+// 		// if the last rikishi rank is equal to rank, get last rikishi number and add one for new rank.
+// 	} else if lastRikishi := masterList[len(masterList)-1]; string(lastRikishi.rank[0]) == rank {
+// 		regex := regexp.MustCompile("[0-9]+")
+// 		oldRankNum, err := strconv.Atoi(regex.FindString(lastRikishi.rank))
+// 		if err != nil {
+// 			panic(err)
+// 		}
 
-		return rank + strconv.Itoa(oldRankNum+1)
-	}
+// 		return rank + strconv.Itoa(oldRankNum+1)
+// 	}
 
-	// rank is not equal.
-	return rank + "1"
-}
+// 	// rank is not equal.
+// 	return rank + "1"
+// }
 
-// uses querySelectory to determine if item exists.
-func containsClass(class string, collyEl *colly.HTMLElement) bool {
-	if collyEl.Attr("class") == class {
-		return true
-	}
-	return false
-}
+// // uses querySelectory to determine if item exists.
+// func containsClass(class string, collyEl *colly.HTMLElement) bool {
+// 	if collyEl.Attr("class") == class {
+// 		return true
+// 	}
+// 	return false
+// }
 
 // function should parse the title and href from the A tag and return a ShikonaATag struct
 func parseShikonaATag(element *colly.HTMLElement) ShikonaATag {
