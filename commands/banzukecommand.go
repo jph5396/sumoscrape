@@ -11,47 +11,17 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly/v2"
+	"github.com/jph5396/sumoscrape/sumomodel"
 )
 
 type (
-	// Rikishi data struct.
-	Rikishi struct {
-		id         int
-		name       string
-		rank       string
-		heya       string
-		shusshin   string
-		hw         string
-		result     string
-		kanji      string
-		dob        string
-		firstbasho string
-		lastbasho  string
-		division   int
-	}
-
-	// ShikonaATag the anchor elements store a portion of desired data
-	// in the title. This struct allows that data to be easily passed out
-	// of function and added to rikishi.
-	ShikonaATag struct {
-		id         int
-		name       string
-		kanji      string
-		heya       string
-		shusshin   string
-		dob        string
-		firstbasho string
-		lastbasho  string
-		hw         string
+	//BanzukeCommand struct containing the Flags for the command and variables that the are used when parsing.
+	BanzukeCommand struct {
+		BanzukeFlags *flag.FlagSet
+		// ID of target basho. in YYYYMM format
+		bashoID int
 	}
 )
-
-//BanzukeCommand struct containing the Flags for the command and variables that the are used when parsing.
-type BanzukeCommand struct {
-	BanzukeFlags *flag.FlagSet
-	// ID of target basho. in YYYYMM format
-	bashoID int
-}
 
 // NewBanzukeCommand creates Banzuke Command and flagset.
 func NewBanzukeCommand() *BanzukeCommand {
@@ -81,7 +51,7 @@ func (cmd *BanzukeCommand) Run() error {
 	}
 
 	c := colly.NewCollector()
-	RikishiList := []Rikishi{}
+	RikishiList := []sumomodel.Rikishi{}
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("visiting", r.URL)
@@ -103,30 +73,30 @@ func (cmd *BanzukeCommand) Run() error {
 			// each tr should represent 1 rikishi
 			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
 
-				var newRikishi Rikishi
+				var newRikishi sumomodel.Rikishi
 
 				//using td index to identify column.
 				tr.ForEach("td", func(j int, td *colly.HTMLElement) {
 					if j == 0 {
-						newRikishi.rank = td.Text
+						newRikishi.Rank = td.Text
 
 						//set division based on rank.
 						if strings.Contains(td.Text, "J") {
-							newRikishi.division = 2
+							newRikishi.Division = 2
 						} else {
-							newRikishi.division = 1
+							newRikishi.Division = 1
 						}
 					}
 					if j == 1 {
 						aTagResults := parseShikonaATag(td)
-						newRikishi.applyTagResults(aTagResults)
+						newRikishi.ApplyTagResults(aTagResults)
 					}
 					if j == 2 {
-						newRikishi.result = td.Text
+						newRikishi.Result = td.Text
 					}
 				})
 
-				if newRikishi.id != 0 {
+				if newRikishi.Id != 0 {
 					RikishiList = append(RikishiList, newRikishi)
 				}
 
@@ -145,8 +115,8 @@ func (cmd *BanzukeCommand) Run() error {
 }
 
 // function should parse the title and href from the A tag and return a ShikonaATag struct
-func parseShikonaATag(element *colly.HTMLElement) ShikonaATag {
-	var returnVal ShikonaATag
+func parseShikonaATag(element *colly.HTMLElement) sumomodel.ShikonaATag {
+	var returnVal sumomodel.ShikonaATag
 
 	titleArr := strings.Split(element.ChildAttr("a", "title"), ",")
 	newid, err := strconv.Atoi(strings.Split(element.ChildAttr("a", "href"), "=")[1])
@@ -154,43 +124,15 @@ func parseShikonaATag(element *colly.HTMLElement) ShikonaATag {
 		panic(err)
 	}
 
-	returnVal.id = newid
-	returnVal.name = element.Text
-	returnVal.kanji = titleArr[0]
-	returnVal.heya = titleArr[1]
-	returnVal.shusshin = titleArr[2]
-	returnVal.dob = titleArr[3]
-	returnVal.firstbasho = titleArr[4]
-	returnVal.lastbasho = titleArr[5]
-	returnVal.hw = titleArr[6]
+	returnVal.Id = newid
+	returnVal.Name = element.Text
+	returnVal.Kanji = titleArr[0]
+	returnVal.Heya = titleArr[1]
+	returnVal.Shusshin = titleArr[2]
+	returnVal.Dob = titleArr[3]
+	returnVal.Firstbasho = titleArr[4]
+	returnVal.Lastbasho = titleArr[5]
+	returnVal.HW = titleArr[6]
 
 	return returnVal
-}
-
-// apply tag results to Rikishi
-func (r *Rikishi) applyTagResults(results ShikonaATag) {
-	r.id = results.id
-	r.name = results.name
-	r.kanji = results.kanji
-	r.heya = results.heya
-	r.shusshin = results.shusshin
-	r.dob = results.dob
-	r.hw = results.hw
-	r.firstbasho = results.firstbasho
-	r.lastbasho = results.lastbasho
-}
-
-// PrintData prints some of the rikishi structs data as a test.
-func (r *Rikishi) PrintData() {
-	fmt.Printf(
-		"id: %v, rank: %v, name: %v, kanji: %v, heya: %v, shusshin: %v, dob = %v, results = %v",
-		r.id,
-		r.rank,
-		r.name,
-		r.kanji,
-		r.heya,
-		r.shusshin,
-		r.dob,
-		r.result)
-	fmt.Println()
 }
