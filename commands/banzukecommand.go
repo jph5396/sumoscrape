@@ -4,6 +4,7 @@ package commands
 // this should be refactored to seperate that logic out into
 // its own package.
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -45,9 +46,36 @@ type (
 	}
 )
 
-// BanzukeScrape will scrape the banzuke of the given basho.
-func BanzukeScrape(basho int) []Rikishi {
-	if basho == -1 {
+//BanzukeCommand struct containing the Flags for the command and variables that the are used when parsing.
+type BanzukeCommand struct {
+	BanzukeFlags *flag.FlagSet
+	// ID of target basho. in YYYYMM format
+	bashoID int
+}
+
+// NewBanzukeCommand creates Banzuke Command and flagset.
+func NewBanzukeCommand() *BanzukeCommand {
+	cmd := &BanzukeCommand{
+		BanzukeFlags: flag.NewFlagSet("banzuke", flag.ExitOnError),
+	}
+	cmd.BanzukeFlags.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
+	return cmd
+}
+
+// CommandName returns the name of the command
+func (cmd *BanzukeCommand) CommandName() string {
+	return cmd.BanzukeFlags.Name()
+}
+
+// Parse the args received from the OS
+func (cmd *BanzukeCommand) Parse(osArgs []string) error {
+	cmd.BanzukeFlags.Parse(osArgs)
+	return nil
+}
+
+// Run runs the BanzukeCommand by reaching out to the target URL and parsing the tables representing the banzuke.
+func (cmd *BanzukeCommand) Run() error {
+	if cmd.bashoID == -1 {
 		fmt.Println("the --basho-id flag must be set in YYYYMM format")
 		os.Exit(1)
 	}
@@ -60,12 +88,10 @@ func BanzukeScrape(basho int) []Rikishi {
 	})
 
 	// check if website returned proper response. If it did not, inform and exit.
-	c.OnResponse(func(r *colly.Response) {
-		if r.StatusCode != 200 {
-			fmt.Printf("%v returned an HTTP code (%v) indicating the request failed. try again later.", r.Request.URL, r.StatusCode)
-			fmt.Println()
-			os.Exit(1)
-		}
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Printf("%v returned an HTTP code (%v) indicating the request failed. try again later.", r.Request.URL, r.StatusCode)
+		fmt.Println()
+		os.Exit(1)
 	})
 
 	c.OnHTML("table.banzuke", func(e *colly.HTMLElement) {
@@ -109,9 +135,13 @@ func BanzukeScrape(basho int) []Rikishi {
 
 	})
 
-	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v&hl=on&c=on", basho))
+	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v&hl=on&c=on", cmd.bashoID))
 
-	return RikishiList
+	for _, rikishi := range RikishiList {
+		rikishi.PrintData()
+	}
+
+	return nil
 }
 
 // function should parse the title and href from the A tag and return a ShikonaATag struct
