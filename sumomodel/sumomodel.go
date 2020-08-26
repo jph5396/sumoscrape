@@ -1,6 +1,12 @@
 package sumomodel
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gocolly/colly/v2"
+)
 
 type (
 	// Rikishi data struct.
@@ -61,4 +67,26 @@ func (r *Rikishi) ApplyTagResults(results ShikonaATag) {
 	r.HW = results.HW
 	r.Firstbasho = results.Firstbasho
 	r.Lastbasho = results.Lastbasho
+}
+
+//ParseShikonaATag takes a colly HtmlElement (which should be a td that contains an a tag with a title)
+// then parses its contents and applies them to a shikonaATag
+func (s *ShikonaATag) ParseShikonaATag(element *colly.HTMLElement) {
+
+	fmt.Println("received", element)
+	titleArr := strings.Split(element.ChildAttr("a", "title"), ",")
+	newid, err := strconv.Atoi(strings.Split(element.ChildAttr("a", "href"), "=")[1])
+	if err != nil {
+		panic(err)
+	}
+
+	s.Id = newid
+	s.Name = element.Text
+	s.Kanji = titleArr[0]
+	s.Heya = titleArr[1]
+	s.Shusshin = titleArr[2]
+	s.Dob = titleArr[3]
+	s.Firstbasho = titleArr[4]
+	s.Lastbasho = titleArr[5]
+	s.HW = titleArr[6]
 }

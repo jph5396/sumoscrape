@@ -7,7 +7,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -88,8 +87,9 @@ func (cmd *BanzukeCommand) Run() error {
 						}
 					}
 					if j == 1 {
-						aTagResults := parseShikonaATag(td)
-						newRikishi.ApplyTagResults(aTagResults)
+						var aTag sumomodel.ShikonaATag
+						aTag.ParseShikonaATag(td)
+						newRikishi.ApplyTagResults(aTag)
 					}
 					if j == 2 {
 						newRikishi.Result = td.Text
@@ -102,7 +102,7 @@ func (cmd *BanzukeCommand) Run() error {
 
 			})
 		}
-
+		fmt.Println("onHTML")
 	})
 
 	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v&hl=on&c=on", cmd.bashoID))
@@ -112,27 +112,4 @@ func (cmd *BanzukeCommand) Run() error {
 	}
 
 	return nil
-}
-
-// function should parse the title and href from the A tag and return a ShikonaATag struct
-func parseShikonaATag(element *colly.HTMLElement) sumomodel.ShikonaATag {
-	var returnVal sumomodel.ShikonaATag
-
-	titleArr := strings.Split(element.ChildAttr("a", "title"), ",")
-	newid, err := strconv.Atoi(strings.Split(element.ChildAttr("a", "href"), "=")[1])
-	if err != nil {
-		panic(err)
-	}
-
-	returnVal.Id = newid
-	returnVal.Name = element.Text
-	returnVal.Kanji = titleArr[0]
-	returnVal.Heya = titleArr[1]
-	returnVal.Shusshin = titleArr[2]
-	returnVal.Dob = titleArr[3]
-	returnVal.Firstbasho = titleArr[4]
-	returnVal.Lastbasho = titleArr[5]
-	returnVal.HW = titleArr[6]
-
-	return returnVal
 }
