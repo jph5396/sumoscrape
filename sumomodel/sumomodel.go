@@ -103,7 +103,6 @@ func (r *Rikishi) ApplyTagResults(results ShikonaATag) {
 // then parses its contents and applies them to a shikonaATag
 func (s *ShikonaATag) ParseShikonaATag(element *colly.HTMLElement) {
 
-	fmt.Println("received", element)
 	titleArr := strings.Split(element.ChildAttr("a", "title"), ",")
 	newid, err := strconv.Atoi(strings.Split(element.ChildAttr("a", "href"), "=")[1])
 	if err != nil {
