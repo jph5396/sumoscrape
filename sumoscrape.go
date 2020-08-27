@@ -13,6 +13,7 @@ func main() {
 
 	cmdRegistry := []commands.Command{
 		commands.NewBanzukeCommand(),
+		commands.NewTorikumiCommand(),
 	}
 
 	if len(os.Args) < 2 {
@@ -27,30 +28,8 @@ func main() {
 			cmd.Run()
 		}
 	}
-
-	//TODO: complete torikumi command and delete old code.
-
-	// torikumiCommand := flag.NewFlagSet("torikumi", flag.ExitOnError)
-	// torikumiBashoIdFlag := torikumiCommand.Int("basho-id", -1, "The basho to target. <YYYYMM>")
-	// torikumiDayFlag := torikumiCommand.Int("day", -1, "day to target.")
-
-	// switch os.Args[1] {
-	// case "banzuke":
-	// 	banzukeCommand.Parse(os.Args[2:])
-	// 	list := commands.BanzukeScrape(*banzukeBashoIdFlag)
-	// 	for _, item := range list {
-	// 		item.PrintData()
-	// 	}
-
-	// case "torikumi":
-	// 	torikumiCommand.Parse(os.Args[2:])
-	// 	fmt.Printf("basho-id: %v. day: %v", *torikumiBashoIdFlag, *torikumiDayFlag)
-	// 	fmt.Println()
-	// default:
-	// 	fmt.Println("Not a valid command.")
-	// 	os.Exit(1)
-	// }
-
 }
 
 //https://blog.rapid7.com/2016/08/04/build-a-simple-cli-tool-with-golang/
+//https://www.digitalocean.com/community/tutorials/how-to-use-the-flag-package-in-go
+//https://golang.org/pkg/flag/

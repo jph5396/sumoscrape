@@ -39,7 +39,37 @@ type (
 		Lastbasho  string
 		HW         string
 	}
+
+	//Bout represents a single bout between two rikishi.
+	Bout struct {
+		Day             int
+		Boutnum         int
+		Division        int
+		EastRikishiID   int
+		EastRikishiName string
+		EastWin         bool
+		WestRikishiID   int
+		WestRikishiName string
+		WestWin         bool
+		Kimarite        string
+	}
 )
+
+// PrintData prints the data for the Bout struct
+func (b *Bout) PrintData() {
+	fmt.Printf("day: %v Bout: %v Div: %v EastId: %v EName: %v EWin: %v WestId: %v WName: %v WWin: %v Kimarite: %v",
+		b.Day,
+		b.Boutnum,
+		b.Division,
+		b.EastRikishiID,
+		b.EastRikishiName,
+		b.EastWin,
+		b.WestRikishiID,
+		b.WestRikishiName,
+		b.WestWin,
+		b.Kimarite)
+	fmt.Println()
+}
 
 // PrintData prints some of the rikishi structs data as a test.
 func (r *Rikishi) PrintData() {

@@ -1,6 +1,14 @@
 package commands
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/gocolly/colly/v2"
+	"github.com/jph5396/sumoscrape/sumomodel"
+)
 
 type (
 
@@ -34,11 +42,110 @@ func (cmd *TorikumiCommand) CommandName() string {
 //Parse parses command arguments and returns an error if any of the values are invalid.
 func (cmd *TorikumiCommand) Parse(osArgs []string) error {
 	cmd.TorikumiFlagSet.Parse(osArgs)
+	//TODO: add error logic.
 	return nil
 }
 
 //Run logic to be executed when the torikumi command is called.
 func (cmd *TorikumiCommand) Run() error {
-	//TODO: add logic
+
+	c := colly.NewCollector()
+	var BoutList []sumomodel.Bout
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("visiting", r.URL)
+	})
+
+	// check if website returned proper response. If it did not, inform and exit.
+	c.OnError(func(r *colly.Response, err error) {
+		fmt.Printf("%v returned an HTTP code (%v) indicating the request failed. try again later.", r.Request.URL, r.StatusCode)
+		fmt.Println()
+		os.Exit(1)
+	})
+
+	c.OnHTML("table.tk_table", func(e *colly.HTMLElement) {
+
+		e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
+			var NewBout sumomodel.Bout
+			// set boutnum to the current iteration
+			NewBout.Boutnum = i
+
+			tr.ForEach("td", func(j int, td *colly.HTMLElement) {
+				// we loop through the td tags on the table and and set the appropriate
+				// variable based on the column index
+
+				// the td at 0 represents the day
+				if j == 0 {
+					day, err := strconv.Atoi(td.Text)
+					if err != nil {
+						panic(err)
+					}
+
+					NewBout.Day = day
+				}
+
+				// td at 2 represents the division
+				if j == 2 {
+					rawdiv, err := strconv.Atoi(td.Text)
+					if err != nil {
+						panic(err)
+					}
+
+					// sites division id starts at 5 while ours start at 1
+					NewBout.Division = rawdiv - 4
+				}
+
+				// td at 5 represents the first (east) wrestler
+				if j == 5 {
+					var shikonaTag sumomodel.ShikonaATag
+					shikonaTag.ParseShikonaATag(td)
+					NewBout.EastRikishiID = shikonaTag.Id
+					NewBout.EastRikishiName = shikonaTag.Name
+				}
+
+				// td at 7 represents the EastWin variable
+				if j == 7 {
+					NewBout.EastWin = didWin(td.Text)
+				}
+
+				// td at 8 represents the kimarite
+				if j == 8 {
+					NewBout.Kimarite = td.Text
+				}
+
+				//td at 9 represents WestWin
+				if j == 9 {
+					NewBout.WestWin = didWin(td.Text)
+				}
+
+				// td at 11 represents west rikishi
+				if j == 11 {
+					var shikonaTag sumomodel.ShikonaATag
+					shikonaTag.ParseShikonaATag(td)
+					NewBout.WestRikishiID = shikonaTag.Id
+					NewBout.WestRikishiName = shikonaTag.Name
+				}
+			})
+
+			if NewBout.Division == 1 || NewBout.Division == 2 {
+				BoutList = append(BoutList, NewBout)
+			}
+		})
+
+	})
+
+	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Results.aspx?b=%v&d=%v&simple=on", cmd.bashoID, cmd.day))
+
+	for _, bout := range BoutList {
+		bout.PrintData()
+	}
+
 	return nil
+}
+
+func didWin(outcome string) bool {
+	if outcome == "W" || outcome == "FS" {
+		return true
+	}
+	return false
 }
