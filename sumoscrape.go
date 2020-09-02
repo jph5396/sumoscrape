@@ -11,9 +11,11 @@ import (
 func main() {
 	sumoutils.PrintTitle()
 
+	config := sumoutils.Init()
+
 	cmdRegistry := []commands.Command{
-		commands.NewBanzukeCommand(),
-		commands.NewTorikumiCommand(),
+		commands.NewBanzukeCommand(config),
+		commands.NewTorikumiCommand(config),
 	}
 
 	if len(os.Args) < 2 {

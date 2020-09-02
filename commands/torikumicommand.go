@@ -8,6 +8,7 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/jph5396/sumoscrape/sumomodel"
+	"github.com/jph5396/sumoscrape/sumoutils"
 )
 
 type (
@@ -16,16 +17,18 @@ type (
 	TorikumiCommand struct {
 		TorikumiFlagSet *flag.FlagSet
 
-		bashoID int
-		day     int
+		bashoID   int
+		day       int
+		sysConfig sumoutils.Config
 	}
 )
 
 //NewTorikumiCommand returns a new ToeikumiCommand type
-func NewTorikumiCommand() *TorikumiCommand {
+func NewTorikumiCommand(config sumoutils.Config) *TorikumiCommand {
 
 	cmd := &TorikumiCommand{
 		TorikumiFlagSet: flag.NewFlagSet("torikumi", flag.ExitOnError),
+		sysConfig:       config,
 	}
 
 	cmd.TorikumiFlagSet.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
@@ -134,11 +137,17 @@ func (cmd *TorikumiCommand) Run() error {
 
 	})
 
-	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Results.aspx?b=%v&d=%v&simple=on", cmd.bashoID, cmd.day))
+	c.OnScraped(func(r *colly.Response) {
+		fileName := sumoutils.CreateFileName(cmd.CommandName())
+		fmt.Println(cmd.sysConfig.SavePath)
+		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, BoutList)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+	})
 
-	for _, bout := range BoutList {
-		bout.PrintData()
-	}
+	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Results.aspx?b=%v&d=%v&simple=on", cmd.bashoID, cmd.day))
 
 	return nil
 }

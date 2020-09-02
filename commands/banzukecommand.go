@@ -11,6 +11,7 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/jph5396/sumoscrape/sumomodel"
+	"github.com/jph5396/sumoscrape/sumoutils"
 )
 
 type (
@@ -19,13 +20,16 @@ type (
 		BanzukeFlags *flag.FlagSet
 		// ID of target basho. in YYYYMM format
 		bashoID int
+
+		sysConfig sumoutils.Config
 	}
 )
 
 // NewBanzukeCommand creates Banzuke Command and flagset.
-func NewBanzukeCommand() *BanzukeCommand {
+func NewBanzukeCommand(config sumoutils.Config) *BanzukeCommand {
 	cmd := &BanzukeCommand{
 		BanzukeFlags: flag.NewFlagSet("banzuke", flag.ExitOnError),
+		sysConfig:    config,
 	}
 	cmd.BanzukeFlags.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
 	return cmd
@@ -102,14 +106,21 @@ func (cmd *BanzukeCommand) Run() error {
 
 			})
 		}
-		fmt.Println("onHTML")
+	})
+
+	// save data post scrape.
+	c.OnScraped(func(r *colly.Response) {
+		fileName := sumoutils.CreateFileName(cmd.CommandName())
+		fmt.Println(cmd.sysConfig.SavePath)
+		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, RikishiList)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+
 	})
 
 	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Banzuke.aspx?b=%v&hl=on&c=on", cmd.bashoID))
-
-	for _, rikishi := range RikishiList {
-		rikishi.PrintData()
-	}
 
 	return nil
 }
