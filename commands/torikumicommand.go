@@ -138,7 +138,7 @@ func (cmd *TorikumiCommand) Run() error {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fileName := sumoutils.CreateFileName(cmd.CommandName())
+		fileName := sumoutils.CreateFileName(cmd.CommandName() + fmt.Sprintf("day%v", cmd.day))
 		fmt.Println(cmd.sysConfig.SavePath)
 		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, BoutList)
 		if err != nil {

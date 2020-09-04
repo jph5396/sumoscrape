@@ -17,7 +17,6 @@ type (
 		// the Path that data should be saved to.
 		// will default to the config's directory.
 		SavePath string `json:"SavePath"`
-		Test     string `json:"Test"`
 	}
 )
 
@@ -53,8 +52,7 @@ func Init() Config {
 
 }
 
-// returns config file path. If it does not exist, it will create and
-// recursively return file path.
+// confirms config exists or creates it.
 func findOrCreateConfig(home string) {
 
 	configFilePath := fmt.Sprintf("%v/%v", home, "sumoscrape/config.json")
@@ -95,7 +93,6 @@ func findOrCreateConfig(home string) {
 			}
 		}
 
-		config.Test = "test"
 		//save config file to user home/sumoscrape/config.json
 		jsonErr := JSONFileWriter(home+"/sumoscrape/config.json", config)
 		if jsonErr != nil {

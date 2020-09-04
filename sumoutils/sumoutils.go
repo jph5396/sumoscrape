@@ -48,7 +48,8 @@ func JSONFileWriter(path string, data interface{}) error {
 	return nil
 }
 
-// CreateFileName creates a file name in the <command name>YYYY-MM-DD
-func CreateFileName(cmd string) string {
-	return strings.ReplaceAll(cmd+time.Now().String(), " ", "") + ".json"
+// CreateFileName creates a file name with the supplied prefix followed by the
+// time in RFC822 format
+func CreateFileName(prefix string) string {
+	return strings.ReplaceAll(prefix+time.Now().Format(time.RFC822), " ", "") + ".json"
 }
