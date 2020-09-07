@@ -18,10 +18,9 @@ type (
 	//BanzukeCommand struct containing the Flags for the command and variables that the are used when parsing.
 	BanzukeCommand struct {
 		BanzukeFlags *flag.FlagSet
-		// ID of target basho. in YYYYMM format
-		bashoID int
-
-		sysConfig sumoutils.Config
+		bashoID      int
+		divisions    []string
+		sysConfig    sumoutils.Config
 	}
 )
 
@@ -111,7 +110,6 @@ func (cmd *BanzukeCommand) Run() error {
 	// save data post scrape.
 	c.OnScraped(func(r *colly.Response) {
 		fileName := sumoutils.CreateFileName(cmd.CommandName())
-		fmt.Println(cmd.sysConfig.SavePath)
 		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, RikishiList)
 		if err != nil {
 			fmt.Println(err.Error())
