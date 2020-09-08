@@ -77,24 +77,19 @@ func (cmd *BanzukeCommand) Run() error {
 
 		tableDivision := strings.Split(e.ChildText("caption"), " ")[0]
 
-		if IsRequestedDivision(RequestedDivisions, tableDivision) {
+		// check if the current division was requested.
+		if divisionID, ok := IsRequestedDivision(RequestedDivisions, tableDivision); ok {
 
 			// each tr should represent 1 rikishi
 			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
 
 				var newRikishi sumomodel.Rikishi
+				newRikishi.Division = divisionID
 
 				//using td index to identify column.
 				tr.ForEach("td", func(j int, td *colly.HTMLElement) {
 					if j == 0 {
 						newRikishi.Rank = td.Text
-
-						//set division based on rank.
-						if strings.Contains(td.Text, "J") {
-							newRikishi.Division = 2
-						} else {
-							newRikishi.Division = 1
-						}
 					}
 					if j == 1 {
 						var aTag sumomodel.ShikonaATag

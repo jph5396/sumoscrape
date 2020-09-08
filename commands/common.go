@@ -31,15 +31,14 @@ func (d *DivisionFlag) Set(s string) error {
 }
 
 // IsRequestedDivision is used to check if a banzuke/ bout was requested
-// by the user. it will return true if the str is present in the division
-// list.
-func IsRequestedDivision(d []sumomodel.Division, str string) bool {
+// by the user. it will return the division ID and true if it was requested.
+func IsRequestedDivision(d []sumomodel.Division, str string) (int, bool) {
 	for _, item := range d {
 		if str == item.DivLongName {
-			return true
+			return item.ID, true
 		}
 	}
-	return false
+	return -1, false
 }
 
 // IsRequestedDivisionByID is used to check if a banzuke/ bout was requested
