@@ -1,8 +1,5 @@
 package commands
 
-//TODO: way too much sumo logic is stored in this command.
-// this should be refactored to seperate that logic out into
-// its own package.
 import (
 	"flag"
 	"fmt"
@@ -18,10 +15,9 @@ type (
 	//BanzukeCommand struct containing the Flags for the command and variables that the are used when parsing.
 	BanzukeCommand struct {
 		BanzukeFlags *flag.FlagSet
-		// ID of target basho. in YYYYMM format
-		bashoID int
-
-		sysConfig sumoutils.Config
+		bashoID      int
+		divisions    DivisionFlag
+		sysConfig    sumoutils.Config
 	}
 )
 
@@ -32,6 +28,7 @@ func NewBanzukeCommand(config sumoutils.Config) *BanzukeCommand {
 		sysConfig:    config,
 	}
 	cmd.BanzukeFlags.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
+	cmd.BanzukeFlags.Var(&cmd.divisions, "division", "A Division to target")
 	return cmd
 }
 
@@ -43,6 +40,11 @@ func (cmd *BanzukeCommand) CommandName() string {
 // Parse the args received from the OS
 func (cmd *BanzukeCommand) Parse(osArgs []string) error {
 	cmd.BanzukeFlags.Parse(osArgs)
+	if len(cmd.divisions) < 1 {
+		// if no divison arguments are provided, default to getting
+		// Makuuchi and Juryo
+		cmd.divisions = append(cmd.divisions, "M", "J")
+	}
 	return nil
 }
 
@@ -55,6 +57,10 @@ func (cmd *BanzukeCommand) Run() error {
 
 	c := colly.NewCollector()
 	RikishiList := []sumomodel.Rikishi{}
+	RequestedDivisions, err := sumomodel.GetDivisionList(cmd.divisions)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("visiting", r.URL)
@@ -69,9 +75,9 @@ func (cmd *BanzukeCommand) Run() error {
 
 	c.OnHTML("table.banzuke", func(e *colly.HTMLElement) {
 
-		tableCaption := e.ChildText("caption")
-		// only target Makuuchi and juryo divisions.
-		if strings.Contains(tableCaption, "Makuuchi") || strings.Contains(tableCaption, "Juryo") {
+		tableDivision := strings.Split(e.ChildText("caption"), " ")[0]
+
+		if IsRequestedDivision(RequestedDivisions, tableDivision) {
 
 			// each tr should represent 1 rikishi
 			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
@@ -111,7 +117,6 @@ func (cmd *BanzukeCommand) Run() error {
 	// save data post scrape.
 	c.OnScraped(func(r *colly.Response) {
 		fileName := sumoutils.CreateFileName(cmd.CommandName())
-		fmt.Println(cmd.sysConfig.SavePath)
 		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, RikishiList)
 		if err != nil {
 			fmt.Println(err.Error())

@@ -16,10 +16,10 @@ type (
 	// TorikumiCommand command and flagset to be executed.
 	TorikumiCommand struct {
 		TorikumiFlagSet *flag.FlagSet
-
-		bashoID   int
-		day       int
-		sysConfig sumoutils.Config
+		bashoID         int
+		day             int
+		divisions       DivisionFlag
+		sysConfig       sumoutils.Config
 	}
 )
 
@@ -33,6 +33,7 @@ func NewTorikumiCommand(config sumoutils.Config) *TorikumiCommand {
 
 	cmd.TorikumiFlagSet.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
 	cmd.TorikumiFlagSet.IntVar(&cmd.day, "day", -1, "the day to get bouts for must be a value between 1-16")
+	cmd.TorikumiFlagSet.Var(&cmd.divisions, "division", "A division to target. Repeatable")
 
 	return cmd
 }
@@ -45,7 +46,10 @@ func (cmd *TorikumiCommand) CommandName() string {
 //Parse parses command arguments and returns an error if any of the values are invalid.
 func (cmd *TorikumiCommand) Parse(osArgs []string) error {
 	cmd.TorikumiFlagSet.Parse(osArgs)
-	//TODO: add error logic.
+	if len(cmd.divisions) < 1 {
+		cmd.divisions = append(cmd.divisions, "M", "J")
+	}
+
 	return nil
 }
 
@@ -54,6 +58,10 @@ func (cmd *TorikumiCommand) Run() error {
 
 	c := colly.NewCollector()
 	var BoutList []sumomodel.Bout
+	RequestedDivisions, err := sumomodel.GetDivisionList(cmd.divisions)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	c.OnRequest(func(r *colly.Request) {
 		fmt.Println("visiting", r.URL)
@@ -130,7 +138,7 @@ func (cmd *TorikumiCommand) Run() error {
 				}
 			})
 
-			if NewBout.Division == 1 || NewBout.Division == 2 {
+			if IsRequestedDivisionByID(RequestedDivisions, NewBout.Division) {
 				BoutList = append(BoutList, NewBout)
 			}
 		})
