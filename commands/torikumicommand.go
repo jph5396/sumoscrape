@@ -80,6 +80,7 @@ func (cmd *TorikumiCommand) Run() error {
 			var NewBout sumomodel.Bout
 			// set boutnum to the current iteration
 			NewBout.Boutnum = i
+			NewBout.BashoID = cmd.bashoID
 
 			tr.ForEach("td", func(j int, td *colly.HTMLElement) {
 				// we loop through the td tags on the table and and set the appropriate

@@ -84,6 +84,7 @@ func (cmd *BanzukeCommand) Run() error {
 			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
 
 				var newRikishi sumomodel.Rikishi
+				newRikishi.BashoID = cmd.bashoID
 				newRikishi.Division = divisionID
 
 				//using td index to identify column.

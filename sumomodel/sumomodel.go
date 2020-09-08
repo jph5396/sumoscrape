@@ -23,6 +23,7 @@ type (
 		Firstbasho string
 		Lastbasho  string
 		Division   int
+		BashoID    int
 	}
 
 	// ShikonaATag the anchor elements store a portion of desired data
@@ -42,6 +43,7 @@ type (
 
 	//Bout represents a single bout between two rikishi.
 	Bout struct {
+		BashoID         int
 		Day             int
 		Boutnum         int
 		Division        int
