@@ -76,9 +76,9 @@ var longForm = map[string]Division{
 	jonokuchi.DivLongName: jonokuchi,
 }
 
-// GetDivisionInfo returns the requested division if it exists, or nil if it doesnt.
+// GetDivision returns the requested division if it exists, or nil if it doesnt.
 // Divisions can be requested by either their short or long forms
-func GetDivisionInfo(str string) (Division, error) {
+func GetDivision(str string) (Division, error) {
 	// check if str is less than 3 characters. If it is,
 	// get Division via the short form.
 	if len(str) < 3 {
@@ -93,4 +93,19 @@ func GetDivisionInfo(str string) (Division, error) {
 	}
 
 	return Division{}, errors.New("division does not exist")
+}
+
+//GetDivisionList takes in a list of requested divisions and
+func GetDivisionList(list []string) ([]Division, error) {
+
+	var divList []Division
+	for _, item := range list {
+		division, err := GetDivision(item)
+		if err != nil {
+			return nil, err
+		}
+		divList = append(divList, division)
+	}
+
+	return divList, nil
 }
