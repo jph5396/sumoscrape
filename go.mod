@@ -14,6 +14,7 @@ require (
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/jawher/mow.cli v1.1.0 // indirect
+	github.com/jph5396/sumomodel v0.0.0-20200913180415-01f6bb2c45a0
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect

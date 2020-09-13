@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gocolly/colly/v2"
-	"github.com/jph5396/sumoscrape/sumomodel"
+	"github.com/jph5396/sumomodel"
 	"github.com/jph5396/sumoscrape/sumoutils"
 )
 
@@ -109,7 +109,7 @@ func (cmd *TorikumiCommand) Run() error {
 
 				// td at 5 represents the first (east) wrestler
 				if j == 5 {
-					var shikonaTag sumomodel.ShikonaATag
+					var shikonaTag ShikonaATag
 					shikonaTag.ParseShikonaATag(td)
 					NewBout.EastRikishiID = shikonaTag.Id
 					NewBout.EastRikishiName = shikonaTag.Name
@@ -132,7 +132,7 @@ func (cmd *TorikumiCommand) Run() error {
 
 				// td at 11 represents west rikishi
 				if j == 11 {
-					var shikonaTag sumomodel.ShikonaATag
+					var shikonaTag ShikonaATag
 					shikonaTag.ParseShikonaATag(td)
 					NewBout.WestRikishiID = shikonaTag.Id
 					NewBout.WestRikishiName = shikonaTag.Name

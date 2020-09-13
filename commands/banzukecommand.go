@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly/v2"
-	"github.com/jph5396/sumoscrape/sumomodel"
+	"github.com/jph5396/sumomodel"
 	"github.com/jph5396/sumoscrape/sumoutils"
 )
 
@@ -93,9 +93,9 @@ func (cmd *BanzukeCommand) Run() error {
 						newRikishi.Rank = td.Text
 					}
 					if j == 1 {
-						var aTag sumomodel.ShikonaATag
+						var aTag ShikonaATag
 						aTag.ParseShikonaATag(td)
-						newRikishi.ApplyTagResults(aTag)
+						ApplyTagResults(aTag, &newRikishi)
 					}
 					if j == 2 {
 						newRikishi.Result = td.Text
