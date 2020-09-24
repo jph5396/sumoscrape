@@ -18,6 +18,7 @@ type (
 		TorikumiFlagSet *flag.FlagSet
 		bashoID         int
 		day             int
+		saveFile        string
 		divisions       DivisionFlag
 		sysConfig       sumoutils.Config
 	}
@@ -33,6 +34,7 @@ func NewTorikumiCommand(config sumoutils.Config) *TorikumiCommand {
 
 	cmd.TorikumiFlagSet.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
 	cmd.TorikumiFlagSet.IntVar(&cmd.day, "day", -1, "the day to get bouts for must be a value between 1-16")
+	cmd.TorikumiFlagSet.StringVar(&cmd.saveFile, "file", "", "Override the default filename.")
 	cmd.TorikumiFlagSet.Var(&cmd.divisions, "division", "A division to target. Repeatable")
 
 	return cmd
@@ -147,8 +149,11 @@ func (cmd *TorikumiCommand) Run() error {
 	})
 
 	c.OnScraped(func(r *colly.Response) {
-		fileName := sumoutils.CreateFileName(cmd.CommandName() + fmt.Sprintf("day%v", cmd.day))
-		fmt.Println(cmd.sysConfig.SavePath)
+		var fileName string = cmd.saveFile
+		if fileName == "" {
+			fileName = sumoutils.CreateFileName(cmd.CommandName() + fmt.Sprintf("day%v", cmd.day))
+		}
+
 		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, BoutList)
 		if err != nil {
 			fmt.Println(err.Error())

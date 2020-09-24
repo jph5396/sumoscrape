@@ -16,6 +16,7 @@ type (
 	BanzukeCommand struct {
 		BanzukeFlags *flag.FlagSet
 		bashoID      int
+		saveFile     string
 		divisions    DivisionFlag
 		sysConfig    sumoutils.Config
 	}
@@ -29,6 +30,7 @@ func NewBanzukeCommand(config sumoutils.Config) *BanzukeCommand {
 	}
 	cmd.BanzukeFlags.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
 	cmd.BanzukeFlags.Var(&cmd.divisions, "division", "A Division to target")
+	cmd.BanzukeFlags.StringVar(&cmd.saveFile, "file", "", "Override the default filename.")
 	return cmd
 }
 
@@ -112,7 +114,12 @@ func (cmd *BanzukeCommand) Run() error {
 
 	// save data post scrape.
 	c.OnScraped(func(r *colly.Response) {
-		fileName := sumoutils.CreateFileName(cmd.CommandName())
+		var fileName string = cmd.saveFile
+		// if the saveFile flag is set to "", create a filename
+		if fileName == "" {
+			fileName = sumoutils.CreateFileName(cmd.CommandName())
+		}
+
 		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, RikishiList)
 		if err != nil {
 			fmt.Println(err.Error())
