@@ -30,82 +30,37 @@ func Init() Config {
 	}
 
 	// Checks if config exists. If it doesnt it will create it.
-	findOrCreateConfig(home)
+
 	var config Config
 
 	configFile, err := os.Open(home + "/sumoscrape/config.json")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	defer configFile.Close()
-	configBytes, readerErr := ioutil.ReadAll(configFile)
-	if readerErr != nil {
-		fmt.Println(readerErr.Error())
-	}
+	if err == nil {
+		configBytes, readerErr := ioutil.ReadAll(configFile)
+		if readerErr != nil {
+			fmt.Println(readerErr.Error())
+		}
 
-	marsh := json.Unmarshal(configBytes, &config)
-	if marsh != nil {
-		fmt.Println(marsh.Error())
+		marsh := json.Unmarshal(configBytes, &config)
+		if marsh != nil {
+			fmt.Println(marsh.Error())
+		}
+	}
+	if os.IsNotExist(err) {
+		fmt.Println("No config file found. using current directory")
+		fmt.Println("run sumoscrape config to create a config file")
+
+		wdir, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		config.SavePath = wdir + "/temp/"
+		os.Mkdir("temp", 0755)
+	} else if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	return config
 
-}
-
-// confirms config exists or creates it.
-func findOrCreateConfig(home string) {
-
-	configFilePath := fmt.Sprintf("%v/%v", home, "sumoscrape/config.json")
-	_, err := os.Stat(configFilePath)
-	if os.IsNotExist(err) {
-		fmt.Println("Config file not found... creating")
-
-		// create sumoscrape directory with user only write access.
-		err := os.Mkdir(home+"/sumoscrape", 0755)
-
-		// Do not continue if an error occurs and it is not because the directory already exists.
-		if err != nil && !os.IsExist(err) {
-
-			fmt.Println("There was an error when creating the sumoscrape directory. Can not continue.")
-			fmt.Printf("error: %v", err.Error())
-			os.Exit(1)
-		}
-
-		var config Config
-
-		// prompt user for output directory. default to user home path /sumoscrape
-		fmt.Println(fmt.Sprintf("Enter path to directory that should be saved to [%v]:", home+"/sumoscrape/data"))
-		fmt.Scanln(&config.SavePath)
-
-		// we call mkdirall here because it does nothing if the directory already exists.
-		if config.SavePath == "" {
-			err := os.MkdirAll(home+"/sumoscrape/data", 0755)
-			if err != nil {
-				fmt.Println(err.Error())
-				os.Exit(1)
-			}
-			config.SavePath = home + "/sumoscrape/data/"
-		} else {
-			err := os.MkdirAll(config.SavePath, 0755)
-			if err != nil {
-				fmt.Printf("%v could not be created.", config.SavePath)
-				fmt.Println(" " + err.Error())
-			}
-		}
-
-		//save config file to user home/sumoscrape/config.json
-		jsonErr := JSONFileWriter(home+"/sumoscrape/config.json", config)
-		if jsonErr != nil {
-			fmt.Println(err.Error())
-		}
-
-		// recursively call findOrCreateConfig to return the file info.
-		findOrCreateConfig(home)
-
-		// if there is an error but it is not caused by a file not existing, notify and exit.
-	} else if err != nil {
-		fmt.Println("An unknown error occured. Cannot continue.")
-		fmt.Printf("error: %v", err.Error())
-		fmt.Println("")
-	}
 }
