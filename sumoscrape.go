@@ -16,6 +16,7 @@ func main() {
 	cmdRegistry := []commands.Command{
 		commands.NewBanzukeCommand(config),
 		commands.NewTorikumiCommand(config),
+		commands.NewConfigCommand(config),
 	}
 
 	if len(os.Args) < 2 {
