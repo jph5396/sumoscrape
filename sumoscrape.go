@@ -8,28 +8,6 @@ import (
 )
 
 func main() {
-	// sumoutils.PrintTitle()
-
-	// config := sumoutils.Init()
-
-	// cmdRegistry := []commands.Command{
-	// 	commands.NewBanzukeCommand(config),
-	// 	commands.NewTorikumiCommand(config),
-	// 	commands.NewConfigCommand(config),
-	// }
-
-	// if len(os.Args) < 2 {
-	// 	fmt.Println("a subcommand is required. the available subcommands are banzuke and torikumi.")
-	// 	os.Exit(1)
-	// }
-
-	// // TODO: add error handling.
-	// for _, cmd := range cmdRegistry {
-	// 	if cmd.CommandName() == os.Args[1] {
-	// 		cmd.Parse(os.Args[2:])
-	// 		cmd.Run()
-	// 	}
-	// }
 
 	err := commands.Execute(os.Args[1:])
 	if err != nil {
