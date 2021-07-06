@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -9,161 +8,132 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/jph5396/sumomodel"
 	"github.com/jph5396/sumoscrape/sumoutils"
+	"github.com/spf13/cobra"
 )
 
-type (
+var dayID int
 
-	// TorikumiCommand command and flagset to be executed.
-	TorikumiCommand struct {
-		TorikumiFlagSet *flag.FlagSet
-		bashoID         int
-		day             int
-		saveFile        string
-		divisions       DivisionFlag
-		sysConfig       sumoutils.Config
-	}
-)
+var torikumiCommand = &cobra.Command{
+	Use:   "torikumi",
+	Short: "The torikumi to get data from",
+	Long:  "The torikumi command scrapes all bouts for a given day.",
+	Run: func(cmd *cobra.Command, args []string) {
+		c := colly.NewCollector()
+		var BoutList []sumomodel.Bout
+		RequestedDivisions, err := sumomodel.GetDivisionList(divisions)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 
-//NewTorikumiCommand returns a new ToeikumiCommand type
-func NewTorikumiCommand(config sumoutils.Config) *TorikumiCommand {
+		c.OnRequest(func(r *colly.Request) {
+			fmt.Println("visiting", r.URL)
+		})
 
-	cmd := &TorikumiCommand{
-		TorikumiFlagSet: flag.NewFlagSet("torikumi", flag.ExitOnError),
-		sysConfig:       config,
-	}
+		// check if website returned proper response. If it did not, inform and exit.
+		c.OnError(func(r *colly.Response, err error) {
+			fmt.Printf("%v returned an HTTP code (%v) indicating the request failed. try again later.", r.Request.URL, r.StatusCode)
+			fmt.Println()
+			os.Exit(1)
+		})
 
-	cmd.TorikumiFlagSet.IntVar(&cmd.bashoID, "basho-id", -1, "The basho to target <YYYYMM>")
-	cmd.TorikumiFlagSet.IntVar(&cmd.day, "day", -1, "the day to get bouts for must be a value between 1-16")
-	cmd.TorikumiFlagSet.StringVar(&cmd.saveFile, "file", "", "Override the default filename.")
-	cmd.TorikumiFlagSet.Var(&cmd.divisions, "division", "A division to target. Repeatable")
+		c.OnHTML("table.tk_table", func(e *colly.HTMLElement) {
 
-	return cmd
-}
+			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
+				var NewBout sumomodel.Bout
+				// set boutnum to the current iteration
+				NewBout.Boutnum = i
+				NewBout.BashoID = bashoID
 
-//CommandName returns command name.
-func (cmd *TorikumiCommand) CommandName() string {
-	return cmd.TorikumiFlagSet.Name()
-}
+				tr.ForEach("td", func(j int, td *colly.HTMLElement) {
+					// we loop through the td tags on the table and and set the appropriate
+					// variable based on the column index
 
-//Parse parses command arguments and returns an error if any of the values are invalid.
-func (cmd *TorikumiCommand) Parse(osArgs []string) error {
-	cmd.TorikumiFlagSet.Parse(osArgs)
-	if len(cmd.divisions) < 1 {
-		cmd.divisions = append(cmd.divisions, "M", "J")
-	}
+					// the td at 0 represents the day
+					if j == 0 {
+						day, err := strconv.Atoi(td.Text)
+						if err != nil {
+							panic(err)
+						}
 
-	return nil
-}
-
-//Run logic to be executed when the torikumi command is called.
-func (cmd *TorikumiCommand) Run() error {
-
-	c := colly.NewCollector()
-	var BoutList []sumomodel.Bout
-	RequestedDivisions, err := sumomodel.GetDivisionList(cmd.divisions)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("visiting", r.URL)
-	})
-
-	// check if website returned proper response. If it did not, inform and exit.
-	c.OnError(func(r *colly.Response, err error) {
-		fmt.Printf("%v returned an HTTP code (%v) indicating the request failed. try again later.", r.Request.URL, r.StatusCode)
-		fmt.Println()
-		os.Exit(1)
-	})
-
-	c.OnHTML("table.tk_table", func(e *colly.HTMLElement) {
-
-		e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
-			var NewBout sumomodel.Bout
-			// set boutnum to the current iteration
-			NewBout.Boutnum = i
-			NewBout.BashoID = cmd.bashoID
-
-			tr.ForEach("td", func(j int, td *colly.HTMLElement) {
-				// we loop through the td tags on the table and and set the appropriate
-				// variable based on the column index
-
-				// the td at 0 represents the day
-				if j == 0 {
-					day, err := strconv.Atoi(td.Text)
-					if err != nil {
-						panic(err)
+						NewBout.Day = day
 					}
 
-					NewBout.Day = day
-				}
+					// td at 2 represents the division
+					if j == 2 {
+						rawdiv, err := strconv.Atoi(td.Text)
+						if err != nil {
+							panic(err)
+						}
 
-				// td at 2 represents the division
-				if j == 2 {
-					rawdiv, err := strconv.Atoi(td.Text)
-					if err != nil {
-						panic(err)
+						// sites division id starts at 5 while ours start at 1
+						NewBout.Division = rawdiv - 4
 					}
 
-					// sites division id starts at 5 while ours start at 1
-					NewBout.Division = rawdiv - 4
-				}
+					// td at 5 represents the first (east) wrestler
+					if j == 5 {
+						var shikonaTag ShikonaATag
+						shikonaTag.ParseShikonaATag(td)
+						NewBout.EastRikishiID = shikonaTag.Id
+						NewBout.EastRikishiName = shikonaTag.Name
+					}
 
-				// td at 5 represents the first (east) wrestler
-				if j == 5 {
-					var shikonaTag ShikonaATag
-					shikonaTag.ParseShikonaATag(td)
-					NewBout.EastRikishiID = shikonaTag.Id
-					NewBout.EastRikishiName = shikonaTag.Name
-				}
+					// td at 7 represents the EastWin variable
+					if j == 7 {
+						NewBout.EastWin = didWin(td.Text)
+					}
 
-				// td at 7 represents the EastWin variable
-				if j == 7 {
-					NewBout.EastWin = didWin(td.Text)
-				}
+					// td at 8 represents the kimarite
+					if j == 8 {
+						NewBout.Kimarite = td.Text
+					}
 
-				// td at 8 represents the kimarite
-				if j == 8 {
-					NewBout.Kimarite = td.Text
-				}
+					//td at 9 represents WestWin
+					if j == 9 {
+						NewBout.WestWin = didWin(td.Text)
+					}
 
-				//td at 9 represents WestWin
-				if j == 9 {
-					NewBout.WestWin = didWin(td.Text)
-				}
+					// td at 11 represents west rikishi
+					if j == 11 {
+						var shikonaTag ShikonaATag
+						shikonaTag.ParseShikonaATag(td)
+						NewBout.WestRikishiID = shikonaTag.Id
+						NewBout.WestRikishiName = shikonaTag.Name
+					}
+				})
 
-				// td at 11 represents west rikishi
-				if j == 11 {
-					var shikonaTag ShikonaATag
-					shikonaTag.ParseShikonaATag(td)
-					NewBout.WestRikishiID = shikonaTag.Id
-					NewBout.WestRikishiName = shikonaTag.Name
+				if IsRequestedDivisionByID(RequestedDivisions, NewBout.Division) {
+					BoutList = append(BoutList, NewBout)
 				}
 			})
 
-			if IsRequestedDivisionByID(RequestedDivisions, NewBout.Division) {
-				BoutList = append(BoutList, NewBout)
+		})
+
+		c.OnScraped(func(r *colly.Response) {
+			fileName := sumoutils.CreateFileName(cmd.Name())
+			dir := cmd.Flag("saveDir").Value.String()
+			if string(dir[len(dir)-1:]) != "/" {
+				dir = dir + "/"
+			}
+
+			err := sumoutils.JSONFileWriter(dir+fileName, BoutList)
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
 			}
 		})
 
-	})
+		c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Results.aspx?b=%v&d=%v&simple=on", bashoID, dayID))
+	},
+}
 
-	c.OnScraped(func(r *colly.Response) {
-		var fileName string = cmd.saveFile
-		if fileName == "" {
-			fileName = sumoutils.CreateFileName(cmd.CommandName() + fmt.Sprintf("day%v", cmd.day))
-		}
+func NewTorikumiCommand() *cobra.Command {
+	torikumiCommand.Flags().IntVarP(&bashoID, "basho-id", "b", 0, "The Basho to get data for YYYYMM")
+	torikumiCommand.Flags().IntVar(&dayID, "day", 0, "the day to get data from")
+	torikumiCommand.Flags().StringArrayVarP(&divisions, "division", "d", []string{"M", "J"}, "The Divisions to target. options: M, J ,Ms, Sd, Jd, Jk")
+	torikumiCommand.MarkFlagRequired("basho-id")
+	torikumiCommand.MarkFlagRequired("day")
 
-		err := sumoutils.JSONFileWriter(cmd.sysConfig.SavePath+fileName, BoutList)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-	})
-
-	c.Visit(fmt.Sprintf("http://sumodb.sumogames.de/Results.aspx?b=%v&d=%v&simple=on", cmd.bashoID, cmd.day))
-
-	return nil
+	return torikumiCommand
 }
 
 func didWin(outcome string) bool {
