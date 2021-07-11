@@ -19,6 +19,11 @@ var banzukeCommand = &cobra.Command{
 	Short: "get Banzuke data",
 	Long:  "Get Banzuke Data from sumodb",
 	Args:  cobra.NoArgs,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if strings.Contains(cmd.Flag("division").Value.String(), "all") {
+			divisions = []string{"M", "J", "Ms", "Sd", "Jd", "Jk"}
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if bashoID == 0 {
 			fmt.Println("the --basho-id flag must be set in YYYYMM format")
@@ -88,7 +93,7 @@ var banzukeCommand = &cobra.Command{
 				dir = dir + "/"
 			}
 
-			err := sumoutils.JSONFileWriter(dir+fileName, RikishiList)
+			err := sumoutils.SaveFile(dir+fileName, RikishiList)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -103,7 +108,7 @@ var banzukeCommand = &cobra.Command{
 
 func NewBanzukeCommand() *cobra.Command {
 	banzukeCommand.Flags().IntVarP(&bashoID, "basho-id", "b", 0, "The Basho ID to get the data for YYYYMM")
-	banzukeCommand.Flags().StringArrayVarP(&divisions, "division", "d", []string{"M", "J"}, "The Division to target. Repeatable <M,J,Ms,Sd, Jd, Jk>")
+	banzukeCommand.Flags().StringArrayVarP(&divisions, "division", "d", []string{"M", "J"}, "The Division to target. Repeatable <M,J,Ms,Sd, Jd, Jk, or all>")
 	banzukeCommand.MarkFlagRequired("basho-id")
 	return banzukeCommand
 }

@@ -188,9 +188,15 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/jawher/mow.cli v1.1.0/go.mod h1:aNaQlc7ozF3vw6IJ2dHjp2ZFiA4ozMIYY6PyuRJwlUg=
 github.com/jph5396/sumomodel v0.0.0-20200913180415-01f6bb2c45a0 h1:+jcjKPPA87u6HCMz4GOwPyrjynCHmHs6bqrCtKwBOss=
 github.com/jph5396/sumomodel v0.0.0-20200913180415-01f6bb2c45a0/go.mod h1:ZnHQKkjYff6umZEVPxkt57Xy+g9DodJYJkeC0MAX3J8=
+github.com/jph5396/sumomodel v0.1.0 h1:MTmCWoVBMB7afo+YR7KF3w2agx8jWPPby6FJbS75vyw=
+github.com/jph5396/sumomodel v0.1.0/go.mod h1:ZnHQKkjYff6umZEVPxkt57Xy+g9DodJYJkeC0MAX3J8=
+github.com/jph5396/sumomodel v0.1.1-0.20210711155100-cbb62c23ec8b h1:v00dsc0FCOVeKmUqprIB71+wXSxBSILZULAbrNwx2Sg=
+github.com/jph5396/sumomodel v0.1.1-0.20210711155100-cbb62c23ec8b/go.mod h1:ZnHQKkjYff6umZEVPxkt57Xy+g9DodJYJkeC0MAX3J8=
 github.com/json-iterator/go v1.1.11/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
+github.com/jszwec/csvutil v1.5.0 h1:ErLnF1Qzzt9svk8CUY7CyLl/W9eET+KWPIZWkE1o6JM=
+github.com/jszwec/csvutil v1.5.0/go.mod h1:Rpu7Uu9giO9subDyMCIQfHVDuLrcaC36UA4YcJjGBkg=
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/kennygrant/sanitize v1.2.4 h1:gN25/otpP5vAsO2djbMhF/LQX6R7+O1TB4yv8NzpJ3o=
 github.com/kennygrant/sanitize v1.2.4/go.mod h1:LGsjYYtgxbetdg5owWB2mpgUL6e2nfw2eObZ0u0qvak=
