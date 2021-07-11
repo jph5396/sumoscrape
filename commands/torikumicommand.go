@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/jph5396/sumomodel"
@@ -17,6 +18,11 @@ var torikumiCommand = &cobra.Command{
 	Use:   "torikumi",
 	Short: "The torikumi to get data from",
 	Long:  "The torikumi command scrapes all bouts for a given day.",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if strings.Contains(cmd.Flag("division").Value.String(), "all") {
+			divisions = []string{"M", "J", "Ms", "Sd", "Jd", "Jk"}
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		c := colly.NewCollector()
 		var BoutList []sumomodel.Bout
@@ -115,7 +121,7 @@ var torikumiCommand = &cobra.Command{
 				dir = dir + "/"
 			}
 
-			err := sumoutils.JSONFileWriter(dir+fileName, BoutList)
+			err := sumoutils.SaveFile(dir+fileName, BoutList)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -129,7 +135,7 @@ var torikumiCommand = &cobra.Command{
 func NewTorikumiCommand() *cobra.Command {
 	torikumiCommand.Flags().IntVarP(&bashoID, "basho-id", "b", 0, "The Basho to get data for YYYYMM")
 	torikumiCommand.Flags().IntVar(&dayID, "day", 0, "the day to get data from")
-	torikumiCommand.Flags().StringArrayVarP(&divisions, "division", "d", []string{"M", "J"}, "The Divisions to target. options: M, J ,Ms, Sd, Jd, Jk")
+	torikumiCommand.Flags().StringArrayVarP(&divisions, "division", "d", []string{"M", "J"}, "The Divisions to target. options: M, J ,Ms, Sd, Jd, Jk, or all")
 	torikumiCommand.MarkFlagRequired("basho-id")
 	torikumiCommand.MarkFlagRequired("day")
 
