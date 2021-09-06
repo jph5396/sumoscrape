@@ -115,7 +115,7 @@ var torikumiCommand = &cobra.Command{
 		})
 
 		c.OnScraped(func(r *colly.Response) {
-			fileName := sumoutils.CreateFileName(cmd.Name())
+			fileName := sumoutils.CreateFileName(cmd.Name() + fmt.Sprintf("day%v", dayID))
 			dir := cmd.Flag("saveDir").Value.String()
 			if string(dir[len(dir)-1:]) != "/" {
 				dir = dir + "/"
