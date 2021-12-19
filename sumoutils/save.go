@@ -54,7 +54,7 @@ func CSVFileWriter(path string, data interface{}) error {
 // CreateFileName creates a file name with the supplied prefix followed by the
 // time in RFC822 format
 func CreateFileName(prefix string) string {
-	return strings.ReplaceAll(prefix+time.Now().Format(time.RFC822), " ", "") + "." + FileType
+	return strings.ReplaceAll(prefix+time.Now().Format("02 Jan 06"), " ", "_") + "." + FileType
 }
 
 // SaveFile takes in the file path and data to save to the file. selects the appropriate

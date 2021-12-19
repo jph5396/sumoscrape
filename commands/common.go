@@ -93,12 +93,12 @@ func (s *ShikonaATag) ParseShikonaATag(element *colly.HTMLElement) {
 	}
 
 	s.Id = newid
-	s.Name = element.Text
-	s.Kanji = titleArr[0]
-	s.Heya = titleArr[1]
-	s.Shusshin = titleArr[2]
-	s.Dob = titleArr[3]
-	s.Firstbasho = titleArr[4]
-	s.Lastbasho = titleArr[5]
-	s.HW = titleArr[6]
+	s.Name = strings.TrimSpace(element.Text)
+	s.Kanji = strings.TrimSpace(titleArr[0])
+	s.Heya = strings.TrimSpace(titleArr[1])
+	s.Shusshin = strings.TrimSpace(titleArr[2])
+	s.Dob = strings.TrimSpace(titleArr[3])
+	s.Firstbasho = strings.TrimSpace(titleArr[4])
+	s.Lastbasho = strings.TrimSpace(titleArr[5])
+	s.HW = strings.TrimSpace(titleArr[6])
 }

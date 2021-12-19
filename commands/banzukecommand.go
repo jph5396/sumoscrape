@@ -65,7 +65,7 @@ var banzukeCommand = &cobra.Command{
 					//using td index to identify column.
 					tr.ForEach("td", func(j int, td *colly.HTMLElement) {
 						if j == 0 {
-							newRikishi.Rank = td.Text
+							newRikishi.Rank = strings.TrimSpace(td.Text)
 						}
 						if j == 1 {
 							var aTag ShikonaATag
@@ -73,7 +73,7 @@ var banzukeCommand = &cobra.Command{
 							ApplyTagResults(aTag, &newRikishi)
 						}
 						if j == 2 {
-							newRikishi.Result = td.Text
+							newRikishi.Result = strings.TrimSpace(td.Text)
 						}
 					})
 
@@ -87,7 +87,7 @@ var banzukeCommand = &cobra.Command{
 
 		// save data post scrape.
 		c.OnScraped(func(r *colly.Response) {
-			fileName := sumoutils.CreateFileName(cmd.Name())
+			fileName := sumoutils.CreateFileName(cmd.Name() + fmt.Sprintf("_%v_", bashoID))
 
 			if string(dir[len(dir)-1:]) != "/" {
 				dir = dir + "/"
